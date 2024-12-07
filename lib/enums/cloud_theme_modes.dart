@@ -1,0 +1,4 @@
+enum CloudThemeModes {
+  dark,
+  light,
+}

@@ -1,0 +1,4 @@
+enum CloudWidgets {
+  SizedBox,
+  Text,
+}
