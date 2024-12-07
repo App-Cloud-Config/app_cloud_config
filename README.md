@@ -22,6 +22,9 @@ Then, run the following command in your terminal:
 flutter pub get
 ```
 
+## DASHBOARD
+[Web portal](https://app-cloud-85563.web.app/#/dashboard)
+
 ## Configuration
 To initialize `app_cloud_config` and set up your app, follow these steps:
 
