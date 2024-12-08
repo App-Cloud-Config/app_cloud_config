@@ -6,31 +6,40 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/material.dart';
 
+/// A singleton class responsible for managing cloud configuration related to themes and Firebase Remote Config.
 class CloudAppConfig implements CloudThemeInterface {
-  // Static variable to hold the singleton instance
+  // Singleton instance of CloudAppConfig.
   static CloudAppConfig? _instance;
 
-  // Private constructor to prevent external instantiation
+  // Private constructor for the singleton pattern.
   CloudAppConfig._();
 
-  // Static method to get the singleton instance
+  /// Returns the singleton instance of CloudAppConfig.
   static CloudAppConfig get instance {
-    _instance ??=
-        CloudAppConfig._(); // If _instance is null, create a new instance
+    _instance ??= CloudAppConfig._();
     return _instance!;
   }
 
+  // Instance of FirebaseRemoteConfig for fetching remote configuration.
   late final FirebaseRemoteConfig firebaseRemoteConfig;
 
+  // Manager responsible for handling cloud theme configurations.
   final CloudAppConfigManager _cloudThemeManager =
       CloudAppConfigManager.instance;
+
+  /// Retrieves the dark theme configuration from the remote service.
+  ///
+  /// Returns a [ColorScheme] representing the dark theme.
   @override
   ColorScheme get darkTheme {
     final CloudAppConfigHelper cloudThemeHelper =
         CloudAppConfigHelper(firebaseRemoteConfig: firebaseRemoteConfig);
-    return cloudThemeHelper.getTheme(CloudThemeModes.light);
+    return cloudThemeHelper.getTheme(CloudThemeModes.dark);
   }
 
+  /// Retrieves the light theme configuration from the remote service.
+  ///
+  /// Returns a [ColorScheme] representing the light theme.
   @override
   ColorScheme get lightTheme {
     final CloudAppConfigHelper cloudThemeHelper =
@@ -38,41 +47,42 @@ class CloudAppConfig implements CloudThemeInterface {
     return cloudThemeHelper.getTheme(CloudThemeModes.light);
   }
 
+  /// Initializes the cloud app configuration by setting up Firebase Remote Config.
+  ///
+  /// You must provide either a [FirebaseApp] instance or a [config] map with the service account path.
+  /// If [app] is provided, it initializes Firebase using that instance.
+  /// If [config] is provided, it initializes Firebase using the service file path.
+  ///
+  /// Throws an [ArgumentError] if both [app] and [config] are provided.
+  /// Throws an [Exception] if initialization fails.
   @override
   Future<void> init({Map<String, dynamic>? config, FirebaseApp? app}) async {
     if (app != null && config != null) {
       throw ArgumentError('You cannot provide both app and serviceFilePath.');
     }
     if (app != null) {
-      // If the app is provided, initialize Firebase with the app instance.
       try {
+        // Initializes FirebaseRemoteConfig with the provided FirebaseApp.
         firebaseRemoteConfig = FirebaseRemoteConfig.instanceFor(app: app);
       } catch (e) {
         throw Exception(
             'Failed to initialize Firebase Remote Config with the provided app: $e');
       }
     } else if (config != null) {
-      // If a service account file path is provided, read and initialize Firebase
       try {
+        // Retrieves the Firebase app instance from the service file and initializes RemoteConfig.
         FirebaseApp app =
             await _cloudThemeManager.getFirebaseAppFromFile(config);
 
-        // Now initialize Firebase Remote Config using the custom app
         firebaseRemoteConfig = FirebaseRemoteConfig.instanceFor(app: app);
 
+        // Sets configuration settings for RemoteConfig.
         await firebaseRemoteConfig.setConfigSettings(RemoteConfigSettings(
           fetchTimeout: const Duration(minutes: 1),
           minimumFetchInterval: const Duration(seconds: 1),
         ));
-        // await setTheme(
-        //     colorScheme: const ColorScheme.dark(),
-        //     themeMode: CloudThemeModes.dark);
-        // await setTheme(
-        //   colorScheme: const ColorScheme.light(),
-        //   themeMode: CloudThemeModes.light,
-        // );
-        // Fetch and activate the remote config
 
+        // Fetches and activates the remote configuration.
         await firebaseRemoteConfig.fetchAndActivate();
       } catch (e) {
         throw Exception(
@@ -83,43 +93,4 @@ class CloudAppConfig implements CloudThemeInterface {
           'You must provide either a serviceFilePath or an app instance.');
     }
   }
-
-  // @override
-  // Future<void> setTheme(
-  //     {required ColorScheme colorScheme,
-  //     required CloudThemeModes themeMode}) async {
-  //   // Create a map to hold the key-value pairs for the remote config
-  //   Map<String, String> configValues = {};
-
-  //   // Define a helper function to handle the color scheme keys and values
-  //   void addColorToConfig(String colorName, Color color) {
-  //     final CloudThemeHelper cloudThemeHelper =
-  //         CloudThemeHelper(firebaseRemoteConfig: _firebaseRemoteConfig);
-  //     String colorHex = cloudThemeHelper.colorToHex(color);
-  //     log('${themeMode.name}_$colorName');
-  //     String key = '${themeMode.name}_$colorName';
-  //     configValues[key] = colorHex;
-  //   }
-
-  //   // Loop through all the colors in the ColorScheme
-  //   addColorToConfig('primary', colorScheme.primary);
-  //   addColorToConfig('secondary', colorScheme.secondary);
-  //   addColorToConfig('background', colorScheme.surface);
-  //   addColorToConfig('surface', colorScheme.surface);
-  //   addColorToConfig('error', colorScheme.error);
-  //   addColorToConfig('onPrimary', colorScheme.onPrimary);
-  //   addColorToConfig('onSecondary', colorScheme.onSecondary);
-  //   addColorToConfig('onBackground', colorScheme.onSurface);
-  //   addColorToConfig('onSurface', colorScheme.onSurface);
-  //   addColorToConfig('onError', colorScheme.onError);
-
-  //   try {
-  //     // Update the Firebase Remote Config with the new color values
-  //     await _firebaseRemoteConfig.setDefaults(configValues);
-  //     print(
-  //         'Theme data has been successfully written to Firebase Remote Config!');
-  //   } catch (e) {
-  //     print('Error while setting theme: $e');
-  //   }
-  // }
 }

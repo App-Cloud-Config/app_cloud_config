@@ -1,6 +1,6 @@
 name: app_cloud_config
-description: "A new Flutter package project."
-version: 0.0.1
+description: "`app_cloud_config` is a cloud-based solution designed to enable dynamic theme changes for your Flutter app, even after it has been deployed to production."
+version: 0.0.3
 homepage: https://app-cloud-85563.web.app/#/dashboard
 
 environment:
